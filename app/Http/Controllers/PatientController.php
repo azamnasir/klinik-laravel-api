@@ -235,7 +235,7 @@ class PatientController extends Controller
             $searchQuery = $request->query('search_query');
 
             // Search for patients based on name or email
-            $patients = Patient::with('user:id,avatar')
+            $patients = Patient::with('user:id,avatar,phone')
                 ->where('name', 'like', '%' . $searchQuery . '%')
                 ->orWhere('email', 'like', '%' . $searchQuery . '%')
                 ->paginate();
@@ -246,6 +246,7 @@ class PatientController extends Controller
                     return [
                         'id' => $patient->id,
                         'name' => $patient->name,
+                        'phone' => $patient->user->phone, 
                         'email' => $patient->email,
                         'avatar' => $patient->user->avatar ?? null,
                         'gender' => $patient->gender,
@@ -312,7 +313,7 @@ class PatientController extends Controller
             $perPage = $request->query('per_page', 15);
 
             // Retrieve patients with related user data, and paginate
-            $patients = Patient::with('user:id,avatar')
+            $patients = Patient::with('user:id,avatar,phone')
                 ->paginate($perPage);
 
             // Map the patients data to include relevant fields
@@ -320,6 +321,7 @@ class PatientController extends Controller
                 return [
                     'id' => $patient->id,
                     'name' => $patient->name,
+					'phone' => $patient->user->phone,
                     'email' => $patient->email,
                     'avatar' => $patient->user->avatar ?? null,
                     'gender' => $patient->gender,
@@ -618,6 +620,7 @@ class PatientController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone, 
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -937,6 +940,7 @@ class PatientController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -1052,6 +1056,7 @@ class PatientController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -1156,6 +1161,7 @@ class PatientController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });

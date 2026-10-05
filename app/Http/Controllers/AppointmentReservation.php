@@ -109,7 +109,7 @@ class AppointmentReservation extends Controller
             ]);
 
             // Fetch doctors from the specified department
-            $doctors = Doctor::where('department_id', $validatedData['departmentId'])->get();
+            $doctors = Doctor::where('department_id', $validatedData['departmentId'])->where('availability','1')->get();
 
             // Return a JSON response with the list of doctors
             return response()->json([
@@ -351,22 +351,22 @@ class AppointmentReservation extends Controller
             $day = $validatedData['day'];
 
             // Create a Stripe checkout session
-            $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET_KEY'));
-            $checkoutSession = $stripe->checkout->sessions->create([
-                'line_items' => [[
-                    'price_data' => [
-                        'currency' => 'usd',
-                        'product_data' => [
-                            'name' => 'Appointment Reservation',
-                        ],
-                        'unit_amount' => $price * 100,
-                    ],
-                    'quantity' => 1,
-                ]],
-                'mode' => 'payment',
-                'success_url' => config('app.frontend_url') . '/appointment-checkout/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => config('app.frontend_url') . '/appointment-checkout/cancel',
-            ]);
+            // $stripe = new \Stripe\StripeClient(env('STRIPE_SECRET_KEY'));
+            // $checkoutSession = $stripe->checkout->sessions->create([
+                // 'line_items' => [[
+                    // 'price_data' => [
+                        // 'currency' => 'usd',
+                        // 'product_data' => [
+                            // 'name' => 'Appointment Reservation',
+                        // ],
+                        // 'unit_amount' => $price * 100,
+                    // ],
+                    // 'quantity' => 1,
+                // ]],
+                // 'mode' => 'payment',
+                // 'success_url' => config('app.frontend_url') . '/appointment-checkout/success?session_id={CHECKOUT_SESSION_ID}',
+                // 'cancel_url' => config('app.frontend_url') . '/appointment-checkout/cancel',
+            // ]);
 
             // Generate a unique order ID
             $orderId = uniqid() . mt_rand(100000, 999999);
@@ -380,7 +380,8 @@ class AppointmentReservation extends Controller
             $appointment->day = $day;
             $appointment->start_time = $startAt;
             $appointment->end_time = $endAt;
-            $appointment->session_id = $checkoutSession->id;
+            // $appointment->session_id = $checkoutSession->id;
+            $appointment->session_id = "";
             $appointment->user_id = Auth::user()->id;
             $appointment->email = Auth::user()->email;
             $appointment->date = $validatedData['date'];
@@ -406,7 +407,8 @@ class AppointmentReservation extends Controller
             // Return a successful response with the checkout URL
             return response()->json([
                 'message' => 'Appointment registered successfully',
-                'checkout_url' => $checkoutSession->url,
+                // 'checkout_url' => $checkoutSession->url,
+                'checkout_url' => "",
                 'appointment_id' => $appointment->id
             ], 200);
         } catch (\Exception $e) {

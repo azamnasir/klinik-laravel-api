@@ -304,7 +304,18 @@ class ScheduleController extends Controller
     }
 
 
+	public function getDoctorsAvailability()
+    {
+        // Get the authenticated doctor
+        $doctor = Doctor::where("user_id",auth()->user()->id)->first(); 
 
+        // Return the available times as a JSON response
+		return response()->json([
+			'status' => 'success',
+			'message' => 'Doctor received Successfully',
+			'data' => $doctor->availability
+		], 200);
+    }
 
 
     /**
@@ -418,4 +429,45 @@ class ScheduleController extends Controller
             ], 200);
         }
     }
+	
+	/**
+     * @OA\Post(
+     *     path="/api/v1/doctor-schedules-toggle-doctors-availability",
+     *     summary="Toggle doctor's availability for appointments", 
+     *     tags={"Doctor"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(),
+     *             @OA\Property()
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Schedule updated  successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="string", example="success"),
+     *             @OA\Property(property="message", type="string", example="Schedule Updated Successfully"),
+     *         )
+     *     )
+     * )
+     */
+	
+	public function toggleDoctorsAvailability(){ 
+	
+		$doctor = Doctor::where('user_id', auth()->user()->id)->first();
+		
+		$availability_to_update = $doctor->availability == 0 ? 1 : 0;
+		
+		$updated_doc = Doctor::where('user_id', auth()->user()->id)->update(["availability" => $availability_to_update]);
+		
+		return response()->json([
+			'status' => 'success',
+			'message' => 'Availability Updated Successfully', 
+			'data' => ["isAvailable" => $availability_to_update]
+		], 200);
+		
+	}
 }

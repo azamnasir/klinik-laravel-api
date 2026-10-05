@@ -115,9 +115,18 @@ class UserController extends Controller
      */
     public function getUserProfilePhoto()
     {
+		
+	
         // Retrieve the authenticated user
-        $user = auth()->user();
-
+        // $user = auth()->user();
+		$user = User::where('id', Auth::id())->first();
+		
+		 if (!$user) {
+			return response()->json([
+				'error' => 'User not found',
+			], 200);
+		}
+		
         // Get the user's profile photo path
         $photo = $user->avatar;
 
@@ -414,7 +423,7 @@ class UserController extends Controller
         try {
             // Get the authenticated user
             $user = User::where('id', Auth::id())->first();
-
+			\Log::error([$user , Auth::id()]);
             // Return an error if the user is not found
             if (!$user) {
                 return response()->json([

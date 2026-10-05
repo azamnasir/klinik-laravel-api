@@ -370,7 +370,9 @@ Route::prefix('v1')->group(function () use ($router) {
         Route::post('/doctor-schedules-set-times', [ScheduleController::class, 'setTimes']);
         Route::get('/doctor-schedules-fetch-times', [ScheduleController::class, 'getTimes']);
         Route::get('/doctor-schedules-fetch-availability', [ScheduleController::class, 'getAvailability']);
+        Route::get('/doctor-schedules-fetch-doctors-availability', [ScheduleController::class, 'getDoctorsAvailability']);
         Route::post('/doctor-schedules-toggle-availability', [ScheduleController::class, 'toggleAvailability']);
+        Route::post('/doctor-schedules-toggle-doctors-availability', [ScheduleController::class, 'toggleDoctorsAvailability']);
         // end doctor schedules endpoints
 
 

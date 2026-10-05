@@ -67,6 +67,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+		\Log::error([$user ]);
         $token = $user->createToken('token')->plainTextToken;
 
         return response()->json([
