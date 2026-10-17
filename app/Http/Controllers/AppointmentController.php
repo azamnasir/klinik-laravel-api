@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\AppointmentNotification;
 use App\Models\Order;
 use App\Models\Patient;
+use App\Models\DoctorTime;
 use App\Models\StartEndTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use OpenApi\Annotations as OA;
@@ -126,6 +127,7 @@ class AppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -260,6 +262,7 @@ class AppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -390,6 +393,7 @@ class AppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name,
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name,
+                    'patient_phone' => $appointment->user->phone,
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -579,7 +583,27 @@ class AppointmentController extends Controller
         try {
             // Find the appointment or fail if not found
             $appointment = Appointment::findOrFail($appointmentId);
+			
+			// HERE REMOVE THE TAKEN DOCTOR 
+			$deleteAppointmentData = DoctorTime::where("doctor_id", $appointment->doctor_id)
+			->where("day",$appointment->day)
+			->where("start_time",$appointment->start_time)
+			->where("date","LIKE","%".$appointment->date."%")
+			->get();
+			foreach ($deleteAppointmentData as $record) {
+				$dates = is_array($record->date) ? $record->date : NULL ;
+				if (is_array($dates)) { 
+					// Remove the matching date from the JSON array
+					$dates = array_values(array_filter($dates, function ($date) use ($appointment) {
+						return $date !== $appointment->date;
+					}));
 
+					// Save remaining dates, or an empty array
+					$record->date = !empty($dates) ? $dates : NULL;
+				}
+				 $record->save();
+			}
+			
             // Delete the appointment
             $appointment->delete();
 

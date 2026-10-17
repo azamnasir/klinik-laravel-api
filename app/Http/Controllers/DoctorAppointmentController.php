@@ -94,6 +94,7 @@ class DoctorAppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name, // Additional doctor details
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name, // Additional patient details
+                    'patient_phone' => $appointment->user->phone, // Additional patient details
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -210,6 +211,7 @@ class DoctorAppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name, // Additional doctor details
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name, // Additional patient details
+                    'patient_phone' => $appointment->user->phone, // Additional patient details
                     'patient_email' => $appointment->user->email
                 ];
             });
@@ -315,6 +317,7 @@ class DoctorAppointmentController extends Controller
                     'doctor_name' => $appointment->doctor->name, // Additional doctor details
                     'doctor_email' => $appointment->doctor->email,
                     'patient_name' => $appointment->user->name, // Additional patient details
+                    'patient_phone' => $appointment->user->phone, // Additional patient details
                     'patient_email' => $appointment->user->email
                 ];
             });

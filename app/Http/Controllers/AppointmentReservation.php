@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use App\Models\AppointmentNotification;
 use App\Events\AppointmentNotifications;
 use App\Mail\AppointmentReservasionSuccess;
+use App\Mail\AppointmentReservationNotification;
 use App\Models\AppointmentNotification as ModelsAppointmentNotification;
 use App\Models\Patient;
 use OpenApi\Annotations as OA;
@@ -329,11 +330,37 @@ class AppointmentReservation extends Controller
                 ->where('day', $validatedData['day'])
                 ->where('start_time', $validatedData['startTime'])
                 ->first();
-
+			$response_message = !$selectedTime ? 'Doctor time slot not found' : '';
+			$existingAppointments = Appointment::where("user_id",Auth::user()->id)->where("doctor_id",$validatedData['doctor'])->get();
+			$appointmentsCounter = 0;
+			$today = new \DateTime('today');
+			foreach($existingAppointments as $Apt){ 
+				$dates = json_decode($Apt->date, true);
+				// if(is_array($dates)){
+					// foreach($dates as $date){
+						// $dateFormatted = \DateTime::createFromFormat("Y-m-d", $date);
+						// if($dateFormatted >= $today ){ //only count if the appointments are in future
+							// $appointmentsCounter++;
+						// }
+					// }
+				// }else{
+						$dateFormatted = \DateTime::createFromFormat("Y-m-d", $Apt->date);
+						
+						// \Log::error([$appointmentsCounter , $response_message,$dateFormatted , $today, $dateFormatted >= $today ? "yes" : "no"]);
+						if($dateFormatted >= $today ){ //only count if the appointments are in future
+							$appointmentsCounter++;
+						}
+				// }
+				
+			}
+			if($appointmentsCounter >= 2){
+				$response_message .= "You have already booked ".$appointmentsCounter." appointments with this Doctor. Maximum 2 Appointments are allowed.";
+			}
+			// \Log::error([$appointmentsCounter , $response_message]);
             // If no matching time slot is found, return a 404 error
-            if (!$selectedTime) {
+            if (!empty($response_message)) {
                 return response()->json([
-                    'message' => 'Doctor time slot not found',
+                    'message' => $response_message
                 ], 404);
             }
 
@@ -387,23 +414,26 @@ class AppointmentReservation extends Controller
             $appointment->date = $validatedData['date'];
             $appointment->save();
 
+			// \Log::error(["Reached here 1"]);
             // Create an appointment notification
             AppointmentNotification::create([
                 'doctor_id' => $appointment->doctor_id,
             ]);
-
+			// \Log::error(["Reached here 2"]);
             // Clear cached appointment counts
             $appointmentsCacheKey = 'count_appointments';
             if (Cache::has($appointmentsCacheKey)) {
                 Cache::forget($appointmentsCacheKey);
             }
-
+			// \Log::error(["Reached here 2.5"]);
             // Clear cached doctor appointments counts
             $doctorCacheKey = "count_doctor_" . Auth::user()->id . "_appointments";
             if (Cache::has($doctorCacheKey)) {
                 Cache::forget($doctorCacheKey);
             }
-
+			
+			Mail::to(Auth::user()->email)->send(new AppointmentReservationNotification($appointment));  
+			// \Log::error(["Reached here 3"]);
             // Return a successful response with the checkout URL
             return response()->json([
                 'message' => 'Appointment registered successfully',
