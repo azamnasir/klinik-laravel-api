@@ -331,6 +331,22 @@ class AppointmentReservation extends Controller
                 ->where('start_time', $validatedData['startTime'])
                 ->first();
 			$response_message = !$selectedTime ? 'Doctor time slot not found' : '';
+            $checkDoctorIsAvailable = Doctor::where("id",$validatedData['doctor'])->get()->first();
+            if(!$checkDoctorIsAvailable->availability){
+                return response()->json([
+                    'message' => "The doctor you selected is not available for appointment."
+                ], 404);
+            }
+            $checkAppointmentIsNotTaken =  Appointment::where("doctor_id",$validatedData['doctor'])
+            ->where("day",$validatedData['day'])
+            ->where("start_time",$validatedData['startTime'])
+            ->where("date", $validatedData['date'])
+            ->get();
+            foreach($checkAppointmentIsNotTaken as $apt_exists){ // return with error in case any entry exists
+                return response()->json([
+                    'message' => "Appointment not available, please select another slot"
+                ], 404);
+            }
 			$existingAppointments = Appointment::where("user_id",Auth::user()->id)->where("doctor_id",$validatedData['doctor'])->get();
 			$appointmentsCounter = 0;
 			$today = new \DateTime('today');
@@ -434,12 +450,23 @@ class AppointmentReservation extends Controller
 			
 			Mail::to(Auth::user()->email)->send(new AppointmentReservationNotification($appointment));  
 			// \Log::error(["Reached here 3"]);
-            // Return a successful response with the checkout URL
+            $appointment->load(['doctor', 'user']);
+            // Return a successful response with the checkout URL and appointment details
             return response()->json([
                 'message' => 'Appointment registered successfully',
                 // 'checkout_url' => $checkoutSession->url,
                 'checkout_url' => "",
-                'appointment_id' => $appointment->id
+                'appointment_id' => $appointment->id,
+                'appointment' => $appointment,
+                'doctor' => $appointment->doctor ? $appointment->doctor->name : null,
+                'doctor_name' => $appointment->doctor ? $appointment->doctor->name : null,
+                'patient' => Auth::user() ? Auth::user()->name : null,
+                'patient_name' => Auth::user() ? Auth::user()->name : null,
+                'date' => $appointment->date,
+                'time' => $appointment->start_time,
+                'start_time' => $appointment->start_time,
+                'end_time' => $appointment->end_time,
+                'day' => $appointment->day,
             ], 200);
         } catch (\Exception $e) {
             // Handle errors and return a JSON response with the error message
